@@ -1,8 +1,28 @@
 (function(){
 'use strict';
 const messages=window.NONOGRAM_MESSAGES, locales=window.NONOGRAM_LOCALES;
+const extraMessages={
+  en:{imagePanelTitle:'Screenshot recognition and automation',imageHelp:'Upload a clear screenshot containing the full grid and all row and column clues. Cropping to the puzzle area helps avoid unrelated page elements.',imageUpload:'Choose screenshot',analyzeImage:'Recognize screenshot',automationTitle:'Mouse automation (optional)',markEmpty:'Also mark empty cells with right click (X)',mouseConfirm:'I confirm that the current screen shows the target Nonogram page',cluesReviewed:'I reviewed the recognized clues and solution',automationNote:'The screenshot must match the current screen position and scale. X/Y are screen offsets for a cropped screenshot; scale handles a different screenshot size. Without confirmation this is a safe dry run and will not move the mouse.',mouseFill:'Generate / run clicks',copyMouseScript:'Copy automation script',imageReady:'Screenshot loaded. Select Recognize screenshot.',imageWorking:'Detecting grid and reading clues…',imageSuccess:'Recognized {rows} × {cols}; confidence {confidence}%. The clues were copied into the input fields and the puzzle was solved.',imageLowConfidence:'Recognition is uncertain ({confidence}%). Check the clues above before using the result.',imageNoGrid:'Could not find a regular grid. Try a clearer screenshot with the full puzzle visible.',imageCluesNotFound:'A grid was detected, but no clue numbers could be read. Include both clue areas in the screenshot.',imageSolveFailed:'The grid was detected, but the recognized clues are not a valid puzzle yet. Adjust the clues and solve again.',mouseDry:'Dry run: {count} click operations prepared. Tick the confirmation box to operate the screen.',mouseDone:'Completed {count} mouse operations.',mouseBlocked:'Tick the confirmation box before allowing mouse control.',mouseNoResult:'Solve a recognized or manually entered puzzle first.',mouseScriptReady:'Automation script copied',mouseError:'Mouse automation failed: {message}'},
+  zh:{imagePanelTitle:'截图识别与自动操作',imageHelp:'上传包含完整棋盘和全部行列线索的清晰截图。建议裁剪到题目区域，减少页面其他内容的干扰。',imageUpload:'选择截图',analyzeImage:'识别截图',automationTitle:'鼠标自动填写（可选）',markEmpty:'同时用右键标记空格（叉号）',mouseConfirm:'我确认要操作当前屏幕上的 Nonogram 页面',cluesReviewed:'我已核对识别线索和求解结果',automationNote:'截图必须对应当前屏幕的位置和比例。偏移量用于裁剪截图：X、Y 是屏幕左上角坐标；缩放用于截图与屏幕尺寸不同的情况。未勾选确认时只进行安全演练，不会移动鼠标。',mouseFill:'生成/执行点击',copyMouseScript:'复制自动化脚本',imageReady:'截图已载入，点击“识别截图”。',imageWorking:'正在检测网格并识别线索…',imageSuccess:'已识别 {rows} × {cols}，置信度 {confidence}%。线索已填入输入框并自动求解。',imageLowConfidence:'识别置信度较低（{confidence}%），执行自动操作前请检查上方线索。',imageNoGrid:'没有找到规则网格，请上传包含完整题目的清晰截图。',imageCluesNotFound:'检测到棋盘，但没有读到行列线索。请确保截图同时包含两侧的数字线索。',imageSolveFailed:'识别完成，但线索暂时无法组成可行题目；请校准行列数字后再求解。',mouseDry:'安全演练：已准备 {count} 个点击操作。勾选确认后才会操作屏幕。',mouseDone:'已完成 {count} 个鼠标操作。',mouseBlocked:'请先勾选确认框，才允许控制鼠标。',mouseNoResult:'请先识别或手动输入并求解一道题。',mouseScriptReady:'自动化脚本已复制',mouseError:'鼠标自动操作失败：{message}'}
+};
+Object.keys(extraMessages).forEach(lang=>Object.assign(messages[lang],extraMessages[lang]));
+const importLabels={
+  ja:{imagePanelTitle:'画像認識と自動入力',imageUpload:'画像を選択',analyzeImage:'画像を認識',automationTitle:'マウス自動入力（任意）',markEmpty:'右クリックで空マスも印を付ける',cluesReviewed:'ヒントと解答を確認しました',mouseFill:'クリックを生成／実行',copyMouseScript:'操作スクリプトをコピー',originX:'画面 X オフセット',originY:'画面 Y オフセット',imageScale:'画像倍率'},
+  ko:{imagePanelTitle:'이미지 인식 및 자동 입력',imageUpload:'이미지 선택',analyzeImage:'이미지 인식',automationTitle:'마우스 자동 입력(선택)',markEmpty:'오른쪽 클릭으로 빈칸도 표시',cluesReviewed:'단서와 답을 확인했습니다',mouseFill:'클릭 생성/실행',copyMouseScript:'자동화 스크립트 복사',originX:'화면 X 오프셋',originY:'화면 Y 오프셋',imageScale:'이미지 배율'},
+  es:{imagePanelTitle:'Reconocimiento y automatización',imageUpload:'Elegir imagen',analyzeImage:'Reconocer imagen',automationTitle:'Relleno automático con ratón',markEmpty:'Marcar vacías con clic derecho',cluesReviewed:'He revisado las pistas y la solución',mouseFill:'Generar / ejecutar clics',copyMouseScript:'Copiar script',originX:'Desplazamiento X',originY:'Desplazamiento Y',imageScale:'Escala de imagen'},
+  fr:{imagePanelTitle:'Reconnaissance et automatisation',imageUpload:'Choisir une image',analyzeImage:'Reconnaître l’image',automationTitle:'Remplissage automatique',markEmpty:'Marquer les cases vides avec le clic droit',cluesReviewed:'J’ai vérifié les indices et la solution',mouseFill:'Générer / exécuter les clics',copyMouseScript:'Copier le script',originX:'Décalage X écran',originY:'Décalage Y écran',imageScale:'Échelle de l’image'},
+  de:{imagePanelTitle:'Bilderkennung und Automatisierung',imageUpload:'Bild auswählen',analyzeImage:'Bild erkennen',automationTitle:'Automatisches Ausfüllen',markEmpty:'Leere Felder per Rechtsklick markieren',cluesReviewed:'Ich habe Hinweise und Lösung geprüft',mouseFill:'Klicks erstellen / ausführen',copyMouseScript:'Skript kopieren',originX:'Bildschirmversatz X',originY:'Bildschirmversatz Y',imageScale:'Bildskalierung'},
+  pt:{imagePanelTitle:'Reconhecimento e automação',imageUpload:'Escolher imagem',analyzeImage:'Reconhecer imagem',automationTitle:'Preenchimento automático',markEmpty:'Marcar vazias com clique direito',cluesReviewed:'Revisei as pistas e a solução',mouseFill:'Gerar / executar cliques',copyMouseScript:'Copiar script',originX:'Deslocamento X',originY:'Deslocamento Y',imageScale:'Escala da imagem'},
+  hi:{imagePanelTitle:'चित्र पहचान और स्वचालन',imageUpload:'चित्र चुनें',analyzeImage:'चित्र पहचानें',automationTitle:'माउस से स्वतः भरें',markEmpty:'दाएँ क्लिक से खाली खाने चिह्नित करें',cluesReviewed:'मैंने संकेत और उत्तर जाँच लिए हैं',mouseFill:'क्लिक बनाएँ / चलाएँ',copyMouseScript:'स्क्रिप्ट कॉपी करें',originX:'स्क्रीन X ऑफ़सेट',originY:'स्क्रीन Y ऑफ़सेट',imageScale:'चित्र स्केल'},
+  ru:{imagePanelTitle:'Распознавание и автоматизация',imageUpload:'Выбрать изображение',analyzeImage:'Распознать изображение',automationTitle:'Автозаполнение мышью',markEmpty:'Отметить пустые клетки правой кнопкой',cluesReviewed:'Я проверил подсказки и ответ',mouseFill:'Создать / выполнить клики',copyMouseScript:'Скопировать скрипт',originX:'Смещение экрана X',originY:'Смещение экрана Y',imageScale:'Масштаб изображения'}
+};
+Object.keys(importLabels).forEach(lang=>Object.assign(messages[lang],importLabels[lang]));
+Object.assign(messages.en,{originX:'Screen X offset',originY:'Screen Y offset',imageScale:'Image scale'});Object.assign(messages.zh,{originX:'屏幕 X 偏移',originY:'屏幕 Y 偏移',imageScale:'截图缩放'});
 const $=selector=>document.querySelector(selector);
 const rowsN=$('#rowsN'), colsN=$('#colsN'), rowsInput=$('#rowsInput'), colsInput=$('#colsInput');
+const imageInput=$('#imageInput'), analyzeImageBtn=$('#analyzeImageBtn'), imagePreview=$('#imagePreview'), imagePreviewImg=$('#imagePreviewImg'), imageStatus=$('#imageStatus');
+let recognizedImage=null, recognizedImageUrl='', applyingRecognized=false;
+let imageStatusState={key:'',args:{},type:''};
 let language='zh', rowsData=[], colsData=[], lastGrid=[], currentResult=null, emptyState={title:'emptyTitle',message:'emptyText'};
 let statusState={title:'ready',message:'readyHint',type:'',args:{}};
 try{const saved=localStorage.getItem('nonogram-language');if(messages[saved]) language=saved}catch(_){}
@@ -30,9 +50,11 @@ function renderLanguage(){
   $('#languageSelect').value=language;
   document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=tr(el.dataset.i18n)});
   $('#languageSelect').setAttribute('aria-label',tr('languageLabel'));
+  document.querySelectorAll('[data-i18n-aria]').forEach(el=>el.setAttribute('aria-label',tr(el.dataset.i18nAria)));
   rowsN.setAttribute('aria-label',tr('rowsLabel'));colsN.setAttribute('aria-label',tr('colsLabel'));
   rowsInput.setAttribute('aria-label',tr('rowsLabel'));colsInput.setAttribute('aria-label',tr('colsLabel'));
   setStatus(statusState.title,statusState.message,statusState.type,statusState.args);
+  setImageStatus(imageStatusState.key,imageStatusState.args,imageStatusState.type);
   renderBoardMeta();renderResult();
   const grid=$('.grid');
   if(grid){
@@ -51,6 +73,13 @@ function syncSize(){
   rowsN.value=r;colsN.value=c;$('#sizeText').textContent=r+' × '+c;
 }
 function invalid(key,args={}){const error=new Error(key);error.key=key;error.args=args;return error}
+function setImageStatus(key,args={},type=''){imageStatusState={key,args,type};imageStatus.className='import-status '+type;imageStatus.textContent=key?tr(key,args):''}
+function applyRecognizedClues(result){
+  const rows=result.rows||[],cols=result.cols||[];
+  applyingRecognized=true;rowsN.value=Math.max(1,Math.min(120,rows.length||1));colsN.value=Math.max(1,Math.min(120,cols.length||1));
+  rowsInput.value=rows.map(line=>(line||[]).join(' ')).join('\n');colsInput.value=cols.map(line=>(line||[]).join(' ')).join('\n');syncSize();
+  applyingRecognized=false;
+}
 function parseClues(text,count){
   const lines=text.replace(/\r/g,'').split('\n');
   if(lines.length>count&&lines.slice(count).some(line=>line.trim())) throw invalid('tooManyClues',{n:count});
@@ -70,6 +99,7 @@ function resetBoard(title='emptyTitle',message='emptyText'){
   renderBoardMeta();renderResult();
 }
 function setSample(){
+  recognizedImage=null;
   rowsN.value=10;colsN.value=10;
   rowsInput.value=['2 2','8','10','10','8','6','4','2','',''].join('\n');
   colsInput.value=['2','4','6','7','7','7','7','6','4','2'].join('\n');
@@ -111,16 +141,60 @@ async function solve(){
     lastGrid=result.grid;currentResult={status:result.status,rows:result.dimensions.rows,cols:result.dimensions.cols,count:result.count};
     buildBoard(result.dimensions.rows,result.dimensions.cols,result.grid);renderResult();
     setStatus(result.status==='multiple'?'multiple':'solved',result.status==='multiple'?'multipleHint':'uniqueHint','ok',{count:result.count});
+    return result;
   }catch(_){resetBoard('adjustTitle','adjustText');setStatus('badInput','serviceError','error')}
   finally{document.body.classList.remove('busy');$('#solveBtn').disabled=false}
 }
+function buildMouseOperations(){
+  if(!recognizedImage||!lastGrid.length)return [];
+  const h=recognizedImage.gridLines.horizontal,v=recognizedImage.gridLines.vertical,scale=Number($('#imageScale').value)||1,ox=Number($('#originX').value)||0,oy=Number($('#originY').value)||0,markEmpty=$('#markEmpty').checked,operations=[];
+  for(let r=0;r<lastGrid.length;r++)for(let c=0;c<lastGrid[r].length;c++){
+    const filled=Boolean(lastGrid[r][c]);if(!filled&&!markEmpty)continue;
+    operations.push({x:Math.round(ox+((v[c]+v[c+1])/2)*scale),y:Math.round(oy+((h[r]+h[r+1])/2)*scale),button:filled?'left':'right',row:r+1,col:c+1});
+  }
+  return operations;
+}
+function mouseScript(operations){
+  return `// Nonogram Studio generated coordinates\nconst operations=${JSON.stringify(operations)};\nfor (const op of operations) {\n  await page.mouse.click(op.x, op.y, {button: op.button});\n  await page.waitForTimeout(35);\n}`;
+}
+async function runMouseFill(){
+  if(!lastGrid.length){setImageStatus('mouseNoResult','', 'error');return}
+  if(recognizedImage&&recognizedImage.confidence<.72&&!$('#cluesReviewed').checked){setImageStatus('imageLowConfidence',{confidence:Math.round(recognizedImage.confidence*100)},'error');return}
+  const operations=buildMouseOperations();if(!operations.length){setImageStatus('mouseNoResult','', 'error');return}
+  const confirmed=$('#mouseConfirm').checked;
+  if(recognizedImage&&!$('#cluesReviewed').checked){setImageStatus('mouseBlocked','', 'error');return}
+  if(!confirmed){setImageStatus('mouseDry',{count:operations.length},'');return}
+  try{
+    const response=await fetch('/api/mouse-fill',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operations,confirm:true})});
+    const result=await response.json();if(!response.ok||result.error)throw new Error(result.error||'request_failed');setImageStatus('mouseDone',{count:result.count},'ok');
+  }catch(error){setImageStatus('mouseError',{message:error.message||'request_failed'},'error')}
+}
+async function copyMouseScript(){
+  const operations=buildMouseOperations();if(!operations.length){setImageStatus('mouseNoResult','', 'error');return}
+  try{await navigator.clipboard.writeText(mouseScript(operations));setImageStatus('mouseScriptReady',{},'ok')}catch(_){setImageStatus('mouseError',{message:tr('copyFailedHint')},'error')}
+}
+window.NONOGRAM_IMPORT={setClues:applyRecognizedClues,solve,getGrid:()=>lastGrid,getImage:()=>recognizedImage};
 $('#languageSelect').addEventListener('change',event=>{language=messages[event.target.value]?event.target.value:'zh';try{localStorage.setItem('nonogram-language',language)}catch(_){}renderLanguage()});
 $('#sampleBtn').addEventListener('click',setSample);$('#solveBtn').addEventListener('click',solve);
-$('#clearBtn').addEventListener('click',()=>{resetBoard('cleared','clearedHint');setStatus('ready','readyHint')});
+$('#clearBtn').addEventListener('click',()=>{recognizedImage=null;resetBoard('cleared','clearedHint');setStatus('ready','readyHint')});
 $('#copyBtn').addEventListener('click',async()=>{
   const text=lastGrid.map(row=>row.map(cell=>cell?'■':'·').join(' ')).join('\n');
   try{await navigator.clipboard.writeText(text);setStatus('copied','copied','ok')}catch(_){setStatus('copyFailed','copyFailedHint','error')}
 });
 rowsN.addEventListener('input',syncSize);colsN.addEventListener('input',syncSize);
+rowsInput.addEventListener('input',()=>{if(!applyingRecognized)$('#cluesReviewed').checked=false});colsInput.addEventListener('input',()=>{if(!applyingRecognized)$('#cluesReviewed').checked=false});
+imageInput.addEventListener('change',()=>{const file=imageInput.files&&imageInput.files[0];if(!file)return;recognizedImage=null;$('#cluesReviewed').checked=false;$('#mouseConfirm').checked=false;if(recognizedImageUrl)URL.revokeObjectURL(recognizedImageUrl);recognizedImageUrl=URL.createObjectURL(file);imagePreviewImg.src=recognizedImageUrl;imagePreview.hidden=false;setImageStatus('imageReady')});
+analyzeImageBtn.addEventListener('click',async()=>{
+  const file=imageInput.files&&imageInput.files[0];if(!file){setImageStatus('imageNoGrid',{},'error');return}
+  analyzeImageBtn.disabled=true;setImageStatus('imageWorking');
+  try{
+    const loaded=await window.NONOGRAM_IMAGE.loadFile(file);recognizedImage=loaded.result;applyRecognizedClues(recognizedImage);
+    const confidence=Math.round((recognizedImage.confidence||0)*100);const result=await solve();
+    if(!result||!['unique','multiple'].includes(result.status)){setImageStatus(confidence<72?'imageLowConfidence':'imageSolveFailed',{rows:recognizedImage.dimensions.rows,cols:recognizedImage.dimensions.cols,confidence},'error');}
+    else{const key=confidence<72?'imageLowConfidence':'imageSuccess';setImageStatus(key,{rows:recognizedImage.dimensions.rows,cols:recognizedImage.dimensions.cols,confidence},confidence<72?'':'ok');}
+  }catch(error){recognizedImage=null;setImageStatus(error.message==='clues_not_found'?'imageCluesNotFound':'imageNoGrid',{},'error')}
+  finally{analyzeImageBtn.disabled=false}
+});
+$('#mouseFillBtn').addEventListener('click',runMouseFill);$('#copyMouseScriptBtn').addEventListener('click',copyMouseScript);
 renderLanguage();setStatus('ready','readyHint');setSample();
 })();

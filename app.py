@@ -1,5 +1,5 @@
 from __future__ import annotations
-import json, os, math, time
+import json, os, math, time, ctypes
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
@@ -18,6 +18,26 @@ def patterns(length: int, clues: list[int]) -> list[int]:
     rec(0,0,0); return out
 
 class SolverLimit(Exception): pass
+
+def validate_mouse_operations(operations):
+    if not isinstance(operations,list) or not operations or len(operations)>5000:
+        raise ValueError('invalid_operations')
+    clean=[]
+    for op in operations:
+        if not isinstance(op,dict) or op.get('button') not in ('left','right'):
+            raise ValueError('invalid_operation')
+        x,y=int(round(float(op['x']))),int(round(float(op['y'])))
+        if not (-10000<=x<=10000 and -10000<=y<=10000):
+            raise ValueError('invalid_coordinate')
+        clean.append((x,y,op['button']))
+    return clean
+
+def execute_mouse_operations(operations,user32,sleep=time.sleep):
+    left,right,up_left,up_right=0x0002,0x0008,0x0004,0x0010
+    for x,y,button in operations:
+        user32.SetCursorPos(x,y); sleep(.018)
+        down,up=(left,up_left) if button=='left' else (right,up_right)
+        user32.mouse_event(down,0,0,0,0); sleep(.012); user32.mouse_event(up,0,0,0,0); sleep(.025)
 
 def solve(rows, cols, limit=2):
     h,w=len(rows),len(cols)
@@ -103,13 +123,16 @@ class Handler(BaseHTTPRequestHandler):
         if urlparse(self.path).path=='/api/health': self._send(200,json.dumps({'ok':True})); return
         static_path=urlparse(self.path).path
         if static_path=='/favicon.ico': self._send(204,b'','image/x-icon'); return
-        assets={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/i18n.js':'i18n.js'}
+        assets={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/i18n.js':'i18n.js','/image.js':'image.js'}
         if static_path in assets:
             filename=assets[static_path]; content_type='text/html' if filename.endswith('.html') else 'application/javascript'
             self._send(200,(ROOT/'static'/filename).read_bytes(),content_type); return
         self._send(404,json.dumps({'error':'not found'}))
     def do_POST(self):
-        if urlparse(self.path).path!='/api/solve': self._send(404,json.dumps({'error':'not found'})); return
+        path=urlparse(self.path).path
+        if path=='/api/mouse-fill':
+            self.handle_mouse_fill(); return
+        if path!='/api/solve': self._send(404,json.dumps({'error':'not found'})); return
         try:
             data=json.loads(self.rfile.read(int(self.headers.get('Content-Length',0))))
             rows=data.get('rows',[]); cols=data.get('cols',[])
@@ -119,6 +142,18 @@ class Handler(BaseHTTPRequestHandler):
             except SolverLimit as e: result={'status':'limit','code':str(e)}
             self._send(200,json.dumps(result,ensure_ascii=False))
         except Exception:self._send(400,json.dumps({'status':'invalid','code':'invalid_clue_format'}))
+    def handle_mouse_fill(self):
+        try:
+            length=int(self.headers.get('Content-Length',0));
+            if length>2_000_000: self._send(413,json.dumps({'error':'payload_too_large'})); return
+            data=json.loads(self.rfile.read(length)); clean=validate_mouse_operations(data.get('operations',[]))
+            if not bool(data.get('confirm')):
+                self._send(200,json.dumps({'ok':True,'dry_run':True,'count':len(clean)})); return
+            if os.name!='nt': self._send(501,json.dumps({'error':'windows_mouse_unavailable'})); return
+            execute_mouse_operations(clean,ctypes.windll.user32)
+            self._send(200,json.dumps({'ok':True,'dry_run':False,'count':len(clean)}))
+        except (ValueError,TypeError,KeyError,OverflowError): self._send(400,json.dumps({'error':'invalid_operations'}))
+        except Exception:self._send(500,json.dumps({'error':'mouse_operation_failed'}))
     def log_message(self,*args): pass
 
 if __name__=='__main__':
