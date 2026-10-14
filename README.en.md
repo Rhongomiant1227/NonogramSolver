@@ -12,7 +12,7 @@ The application uses only Python's standard library, so no third-party runtime p
 
 ## Screenshot recognition
 
-Open “Screenshot recognition and automation”, choose a PNG or JPEG containing the full puzzle, clue areas, and board (cropping to the puzzle area avoids browser chrome and unrelated page content), then select “Recognize screenshot”. Grid and clue recognition run locally in the browser. The detected clues remain editable, and the app reports a confidence score before attempting to solve. Common white-background boards with dark borders, thick separators, and multi-digit clues such as 13 or 16 are supported. Check the clues manually when confidence is low or the site uses an unusual font.
+Open “Screenshot recognition and automation”, choose a PNG or JPEG containing the full puzzle, clue areas, and board (cropping to the puzzle area avoids browser chrome and unrelated page content), then select “Recognize screenshot”; you can also press Ctrl+V to paste a screenshot. Grid and clue recognition run locally in the browser. The detected clues remain editable, and the app reports a confidence score before attempting to solve. Common white-background boards with dark borders, thick separators, and multi-digit clues such as 13 or 16 are supported. Check the clues manually when confidence is low or the site uses an unusual font.
 
 After a successful solve, the app can generate left-click operations for filled cells and optional right-click operations for empty cells. Set X/Y offsets and scale for the current screen. The first click is always a dry-run unless both confirmation boxes are checked: confirm that the target page is visible and confirm that you reviewed the recognized clues and solution. The Windows API path is protected by these checks; non-Windows systems can still copy the generated script.
 
@@ -32,7 +32,7 @@ The solver generates valid row and column arrangements, applies constraint propa
 .\.venv\Scripts\python.exe -m unittest -v
 ```
 
-The acceptance flow covers attachment upload, 25×25 grid detection, multi-digit clue recognition, automatic solving, language switching, phone-width layout, and mouse dry-run validation. An online Nonogram board was also used to verify the common left-click fill and right-click mark semantics; screen coordinates still need to be calibrated for the current page.
+The acceptance flow covers attachment upload, Ctrl+V screenshot paste, 25×25 grid detection, multi-digit clue recognition, automatic solving, normal text paste, language switching, phone-width layout, and mouse dry-run validation. An online Nonogram board was also used to verify the common left-click fill and right-click mark semantics; screen coordinates still need to be calibrated for the current page.
 
 ## Files
 
